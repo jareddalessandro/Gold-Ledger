@@ -3,6 +3,11 @@
     Date: 3/23/18
     Purpose: Keeps track of income
 */
+/*
+    FEATURES:
+    If the user enters invalid input into either income textfields then the textfield turns red.
+    If the user doesn't enter data into every textfield an Alert pops up, and the program doesn't write to file.
+*/
 
 import javafx.application.Application;
 import javafx.beans.property.SimpleDoubleProperty;
