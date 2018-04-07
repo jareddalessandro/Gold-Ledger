@@ -1,17 +1,16 @@
 /*
     Author: Jared Dalessandro
     Date: 3/23/18
-    Purpose: Keeps track of income
-*/
-/*
-To build artifacts
-File -> Project Structure -> Artifacts -> + sign -> Java application from module -> JavaFX tab
+    Purpose: Application to keep track of annual income, and taxes paid. Writes to a txt file
+             which can be swapped out and archived every year.
+    
+    To build artifacts
+    File -> Project Structure -> Artifacts -> + sign -> Java application from module -> JavaFX tab
         -> Application class = class that contains main(), Native bundle = all -> apply ->
         Build -> build artifacts
-*/
-
-/*
+        
     FEATURES:
+    Calculates the total income entered and calculates total taxes paid.
     If the user enters invalid input into either income textfields then the textfield turns red.
     If the user doesn't enter data into every textfield an Alert pops up, and the program doesn't write to file.
 */
@@ -49,7 +48,7 @@ public class App extends Application {
         final String FILENAME = "deposits.txt";
         final File file = new File(FILENAME);
 
-        // GRID & SCENE & STAGE
+        // Panes: grid for textfields, hbox for tableview, borderpane to organize properly
         BorderPane mainPane = new BorderPane();
         HBox topPane = new HBox();
         GridPane gridpane = new GridPane();
@@ -78,6 +77,7 @@ public class App extends Application {
         netField.setOnKeyTyped(new CheckKey(netField));
 
         // Add Labels for the Textfields and then add TextFields to grid
+        // Grid works as (column, row)
         gridpane.add(new Label("Memo:"), 0,0);
         gridpane.add(new Label("Date:"),2,0);
         gridpane.add(new Label("Gross:"), 4,0);
@@ -136,7 +136,7 @@ public class App extends Application {
         primaryStage.show();
 
 
-        ///////////////////// BUTTON HANDLERS /////////////////////////////
+        ///////////////////// BUTTON HANDLER /////////////////////////////
 
         // Writes text field values to deposits.txt and then refreshes data
         // If a field is missing doesn't write data.
@@ -203,12 +203,12 @@ public class App extends Application {
 
     }
 
-    // Reads deposits from deposits.txt, and calculates total gross, net and tax
+    // Reads deposits from deposits.txt, populates tableview, and calculates total gross, net and tax
     private void getDeposits(TableView table, File file){
 
         ArrayList<Deposit> depositArrayList = new ArrayList<>();
 
-        //Instance variables
+        // Instance variables
         double totalNetIncome = 0;
         double totalGrossIncome = 0;
         double totalTaxPaid = 0;
@@ -217,11 +217,12 @@ public class App extends Application {
 
             Scanner sc = new Scanner(file);
 
-            //Clears the arrayList before each reading
+            // Clears the arrayList before each reading
             depositArrayList.clear();
 
             while(sc.hasNextLine()) {
 
+                // Creates and fills a deposit obj to add to the arraylist
                 Deposit depositObj = new Deposit();
                 depositObj.setMemo(sc.nextLine());
                 depositObj.setDate(sc.nextLine());
@@ -229,7 +230,7 @@ public class App extends Application {
                 depositObj.setNetIncome(Double.parseDouble(sc.nextLine()));
                 depositArrayList.add(depositObj);
 
-                //We use a counter so we can wrap with String.valueOf later
+                // We use a counter so we can format and parse later
                 totalGrossIncome += depositObj.getGrossIncome();
                 totalNetIncome += depositObj.getNetIncome();
 
@@ -242,18 +243,21 @@ public class App extends Application {
         // TableView's require an observableList, so we must convert.
         ObservableList<Deposit> olDepositList = FXCollections.observableArrayList(depositArrayList);
 
+        // Create separator line
         Deposit blankDepositLine = new Deposit();
         blankDepositLine.setMemo("--------------------------------------------------");
         blankDepositLine.setDate("-------------------");
         blankDepositLine.setGrossIncome(0);
         blankDepositLine.setNetIncome(0);
 
+        // Create Total line deposit
         Deposit totalDepositLine = new Deposit();
         totalDepositLine.setMemo("TOTAL: ");
         totalDepositLine.setDate("Cumulative");
         totalDepositLine.setGrossIncome(Double.parseDouble(String.format("%1.2f", totalGrossIncome)));
         totalDepositLine.setNetIncome(Double.parseDouble(String.format("%1.2f", totalNetIncome)));
 
+        // Create Tax line
         Deposit taxDepositeLine = new Deposit();
         totalTaxPaid = (totalGrossIncome - totalNetIncome);
         taxDepositeLine.setMemo("TAXES PAID: $" + String.format("%1.2f", totalTaxPaid));
@@ -261,19 +265,19 @@ public class App extends Application {
         taxDepositeLine.setGrossIncome(0.00);
         taxDepositeLine.setNetIncome(0.00);
 
-        // Add blank line and total line, and tax line to the observable list for the textview
+        // Add blank line and total line, and tax line to the botton of the observable list for the textview
         olDepositList.add(blankDepositLine);
         olDepositList.add(totalDepositLine);
         olDepositList.add(taxDepositeLine);
 
 
-        // Set the items for the view
+        // Add the items to the view
         table.setItems(olDepositList);
 
     }
 
 
-    //////////////// LIGHT THE CANDLE ///////////
+    //////////////// LIGHT THIS CANDLE ///////////
     public static void main(String[] args){
         launch(args);
     }
@@ -281,10 +285,10 @@ public class App extends Application {
 }
 
 /*
-Checks for non-numeric keys
-Uses the textfield as a parameter takes in constructor
-checks if the text includes any non-numerics using regex
-Syntax: tfOtherIncome.setOnKeyTyped(new CheckKey(tfOtherIncome))
+    Checks for non-numeric keys
+    Uses the textfield as a parameter takes in constructor
+    checks if the text includes any non-numerics using regex
+    Syntax: tfOtherIncome.setOnKeyTyped(new CheckKey(tfOtherIncome))
 */
 
 class CheckKey implements EventHandler<KeyEvent> {
