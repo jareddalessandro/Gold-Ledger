@@ -4,6 +4,13 @@
     Purpose: Keeps track of income
 */
 /*
+To build artifacts
+File -> Project Structure -> Artifacts -> + sign -> Java application from module -> JavaFX tab
+        -> Application class = class that contains main(), Native bundle = all -> apply ->
+        Build -> build artifacts
+*/
+
+/*
     FEATURES:
     If the user enters invalid input into either income textfields then the textfield turns red.
     If the user doesn't enter data into every textfield an Alert pops up, and the program doesn't write to file.
@@ -83,7 +90,7 @@ public class App extends Application {
         // TABLEVIEW Config
         TableView<Deposit> table = new TableView<>();
         TableColumn<Deposit, SimpleStringProperty> memoCol = new TableColumn<>("Memo");
-        TableColumn<Deposit, SimpleStringProperty> dateCol = new TableColumn<>("Date");
+        TableColumn<Deposit, SimpleStringProperty> dateCol = new TableColumn<>("Date (MM/dd)");
         TableColumn<Deposit, SimpleDoubleProperty> grossCol = new TableColumn<>("Gross Income");
         TableColumn<Deposit, SimpleDoubleProperty> netCol = new TableColumn<>("Net Income");
         table.setPrefSize(650,360);
@@ -101,13 +108,12 @@ public class App extends Application {
         grossCol.setCellValueFactory(new PropertyValueFactory<>("grossIncome"));
         netCol.setCellValueFactory(new PropertyValueFactory<>("netIncome"));
 
-        // Button declarations
+        // Button declaration and Config
         Button addBtn = new Button("Add");
-        addBtn.setStyle("-fx-background-color: LIGHTSLATEGREY");
         addBtn.setTextFill(Color.WHITE);
+        addBtn.setStyle("-fx-background-color: STEELBLUE");
         addBtn.setPrefWidth(80);
         gridpane.add(addBtn,8,0);
-
 
 
         // Place panes in correct orientation
@@ -121,7 +127,7 @@ public class App extends Application {
 
 
         ////////////// SCENE, ICON, STAGE //////////////////////////
-        Scene scene = new Scene(mainPane, 650, 400);
+        Scene scene = new Scene(mainPane, 650, 410);
         primaryStage.setTitle("Gold Ledger");
         Image icon = new Image("file:money.png");
         primaryStage.getIcons().add(icon);
@@ -176,7 +182,7 @@ public class App extends Application {
                 writer.println(memo);
                 writer.println(date);
                 writer.println(grossIncome);
-                writer.print(netIncome); //This way we write an extra blank line at the end.
+                writer.print(netIncome); //This way we don't write an extra blank line at the end.
                 writer.close();
 
                 //Clear fields once data is sent.
@@ -190,17 +196,22 @@ public class App extends Application {
             }
 
 
-            // Refresh the table after writing
+            // Refresh the table, and total after writing
             getDeposits(table, file);
 
         });
 
     }
 
-    // Reads deposits from deposits.txt
+    // Reads deposits from deposits.txt, and calculates total gross, net and tax
     private void getDeposits(TableView table, File file){
 
         ArrayList<Deposit> depositArrayList = new ArrayList<>();
+
+        //Instance variables
+        double totalNetIncome = 0;
+        double totalGrossIncome = 0;
+        double totalTaxPaid = 0;
 
         try {
 
@@ -218,6 +229,10 @@ public class App extends Application {
                 depositObj.setNetIncome(Double.parseDouble(sc.nextLine()));
                 depositArrayList.add(depositObj);
 
+                //We use a counter so we can wrap with String.valueOf later
+                totalGrossIncome += depositObj.getGrossIncome();
+                totalNetIncome += depositObj.getNetIncome();
+
             }
         }
         catch(Exception e){
@@ -226,8 +241,37 @@ public class App extends Application {
 
         // TableView's require an observableList, so we must convert.
         ObservableList<Deposit> olDepositList = FXCollections.observableArrayList(depositArrayList);
+
+        Deposit blankDepositLine = new Deposit();
+        blankDepositLine.setMemo("--------------------------------------------------");
+        blankDepositLine.setDate("-------------------");
+        blankDepositLine.setGrossIncome(0);
+        blankDepositLine.setNetIncome(0);
+
+        Deposit totalDepositLine = new Deposit();
+        totalDepositLine.setMemo("TOTAL: ");
+        totalDepositLine.setDate("Cumulative");
+        totalDepositLine.setGrossIncome(Double.parseDouble(String.format("%1.2f", totalGrossIncome)));
+        totalDepositLine.setNetIncome(Double.parseDouble(String.format("%1.2f", totalNetIncome)));
+
+        Deposit taxDepositeLine = new Deposit();
+        totalTaxPaid = (totalGrossIncome - totalNetIncome);
+        taxDepositeLine.setMemo("TAXES PAID: $" + String.format("%1.2f", totalTaxPaid));
+        taxDepositeLine.setDate("Culmulative");
+        taxDepositeLine.setGrossIncome(0.00);
+        taxDepositeLine.setNetIncome(0.00);
+
+        // Add blank line and total line, and tax line to the observable list for the textview
+        olDepositList.add(blankDepositLine);
+        olDepositList.add(totalDepositLine);
+        olDepositList.add(taxDepositeLine);
+
+
+        // Set the items for the view
         table.setItems(olDepositList);
+
     }
+
 
     //////////////// LIGHT THE CANDLE ///////////
     public static void main(String[] args){
@@ -242,6 +286,7 @@ Uses the textfield as a parameter takes in constructor
 checks if the text includes any non-numerics using regex
 Syntax: tfOtherIncome.setOnKeyTyped(new CheckKey(tfOtherIncome))
 */
+
 class CheckKey implements EventHandler<KeyEvent> {
 
     private TextField tf;
