@@ -41,6 +41,9 @@ import java.util.Scanner;
 
 public class App extends Application {
 
+    /*
+    Adding some test comments for git
+     */
 
     @Override
     public void start(Stage primaryStage) {
