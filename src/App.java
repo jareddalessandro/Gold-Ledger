@@ -143,7 +143,8 @@ public class App extends Application {
         addBtn.setOnAction((ActionEvent e) -> {
 
             try{
-                //This way it's in append mode, so that we don't delete previous data
+                // This way it's in append mode, so that we don't delete previous data,
+                // while being able to use PrintWriter's println method
                 PrintWriter writer = new PrintWriter(new FileWriter(file, true));
 
                 // Create alert if missing data
